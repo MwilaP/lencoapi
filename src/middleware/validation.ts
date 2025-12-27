@@ -34,3 +34,11 @@ export const verifyPaymentValidation = [
   body('reference').isString().notEmpty().withMessage('Payment reference is required'),
   validateRequest,
 ];
+
+export const referralAccessPaymentValidation = [
+  body('userId').isUUID().withMessage('Valid user ID is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('phone').matches(/^(09|07)\d{8}$/).withMessage('Valid Zambian phone number is required (e.g., 0977123456)'),
+  body('operator').isIn(['mtn', 'airtel', 'zamtel']).withMessage('Valid operator is required (mtn, airtel, or zamtel)'),
+  validateRequest,
+];

@@ -4,6 +4,7 @@ import { lencoPayService } from '../services/lencopay.service';
 import {
   subscriptionPaymentValidation,
   contactUnlockPaymentValidation,
+  referralAccessPaymentValidation,
   verifyPaymentValidation,
 } from '../middleware/validation';
 import { logger } from '../utils/logger';
@@ -36,6 +37,41 @@ router.post(
       });
     } catch (error: any) {
       logger.error('Failed to initiate subscription payment', { error: error.message });
+      res.status(500).json({
+        success: false,
+        error: {
+          message: error.message || 'Failed to initiate payment',
+        },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/payments/referral-access/initiate
+ * Initiate a referral access payment
+ */
+router.post(
+  '/referral-access/initiate',
+  referralAccessPaymentValidation,
+  async (req: Request, res: Response) => {
+    try {
+      const { userId, email, phone, operator } = req.body;
+
+      const result = await paymentService.initiateReferralAccessPayment({
+        userId,
+        email,
+        phone,
+        operator,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: result,
+        message: 'Referral access payment initiated. Please complete payment on your phone.',
+      });
+    } catch (error: any) {
+      logger.error('Failed to initiate referral access payment', { error: error.message });
       res.status(500).json({
         success: false,
         error: {

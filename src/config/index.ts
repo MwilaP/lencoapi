@@ -27,6 +27,7 @@ export const config = {
   payment: {
     subscriptionAmount: parseFloat(process.env.SUBSCRIPTION_AMOUNT || '100.00'),
     contactUnlockAmount: parseFloat(process.env.CONTACT_UNLOCK_AMOUNT || '30.00'),
+    referralAccessAmount: parseFloat(process.env.REFERRAL_ACCESS_AMOUNT || '30.00'),
     defaultCurrency: process.env.DEFAULT_CURRENCY || 'ZMW',
   },
 };

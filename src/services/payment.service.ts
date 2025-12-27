@@ -19,6 +19,13 @@ export interface InitiateContactUnlockPaymentRequest {
   operator: 'mtn' | 'airtel' | 'zamtel';
 }
 
+export interface InitiateReferralAccessPaymentRequest {
+  userId: string;
+  email: string;
+  phone: string;
+  operator: 'mtn' | 'airtel' | 'zamtel';
+}
+
 export class PaymentService {
   /**
    * Initiate a subscription payment
@@ -77,6 +84,70 @@ export class PaymentService {
       };
     } catch (error: any) {
       logger.error('Failed to initiate subscription payment', {
+        error: error.message,
+        userId: request.userId,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Initiate a referral access payment
+   */
+  async initiateReferralAccessPayment(
+    request: InitiateReferralAccessPaymentRequest
+  ): Promise<{ reference: string; paymentId: string; status: string }> {
+    try {
+      const reference = lencoPayService.generateReference('REFACCESS');
+      const amount = config.payment.referralAccessAmount;
+
+      // Create payment record in database
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          user_id: request.userId,
+          amount,
+          payment_type: 'referral_access',
+          payment_method: 'mobile_money',
+          status: 'pending',
+          transaction_reference: reference,
+        })
+        .select()
+        .single();
+
+      if (paymentError) {
+        logger.error('Failed to create payment record', { error: paymentError });
+        throw new Error('Failed to create payment record');
+      }
+
+      // Initiate payment with Lencopay
+      const paymentData: MobileMoneyPaymentRequest = {
+        amount,
+        currency: config.payment.defaultCurrency,
+        reference,
+        email: request.email,
+        phone: request.phone,
+        country: 'zm',
+        operator: request.operator,
+        bearer: 'customer',
+      };
+
+      const lencoResponse = await lencoPayService.initiateMobileMoneyPayment(paymentData);
+
+      logger.info('Referral access payment initiated', {
+        userId: request.userId,
+        reference,
+        paymentId: payment.id,
+        lencoStatus: lencoResponse.data.status,
+      });
+
+      return {
+        reference,
+        paymentId: payment.id,
+        status: lencoResponse.data.status,
+      };
+    } catch (error: any) {
+      logger.error('Failed to initiate referral access payment', {
         error: error.message,
         userId: request.userId,
       });
@@ -211,6 +282,8 @@ export class PaymentService {
           await this.activateSubscription(payment.user_id);
         } else if (payment.payment_type === 'contact_unlock') {
           await this.unlockContact(payment.user_id, payment.provider_id!);
+        } else if (payment.payment_type === 'referral_access') {
+          await this.grantReferralAccess(payment.user_id);
         }
       }
 
@@ -276,6 +349,25 @@ export class PaymentService {
     }
 
     logger.info('Contact unlocked', { clientId, providerId });
+  }
+
+  /**
+   * Grant referral access to a provider
+   */
+  private async grantReferralAccess(userId: string): Promise<void> {
+    // Call the Supabase RPC function to grant referral access
+    const { error } = await supabase.rpc('grant_provider_referral_access', {
+      p_user_id: userId,
+      p_payment_method: 'mobile_money',
+      p_payment_reference: 'COMPLETED',
+    });
+
+    if (error) {
+      logger.error('Failed to grant referral access', { error, userId });
+      throw new Error('Failed to grant referral access');
+    }
+
+    logger.info('Referral access granted', { userId });
   }
 
   /**
