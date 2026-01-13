@@ -37,10 +37,15 @@ router.post('/lencopay', async (req: Request, res: Response) => {
         });
       }
 
-      // Verify and complete the payment
-      await paymentService.verifyAndCompletePayment(reference);
-
-      logger.info('Payment completed via webhook', { reference });
+      // Check if this is a commitment fee payment
+      if (reference.startsWith('COMMIT-')) {
+        await paymentService.completeCommitmentPayment(reference);
+        logger.info('Commitment fee payment completed via webhook', { reference });
+      } else {
+        // Verify and complete regular payment
+        await paymentService.verifyAndCompletePayment(reference);
+        logger.info('Payment completed via webhook', { reference });
+      }
 
       return res.status(200).json({
         success: true,
