@@ -30,6 +30,13 @@ export const config = {
     referralAccessAmount: parseFloat(process.env.REFERRAL_ACCESS_AMOUNT || '30.00'),
     defaultCurrency: process.env.DEFAULT_CURRENCY || 'ZMW',
   },
+
+  booking: {
+    paymentExpiryMinutes: parseInt(process.env.BOOKING_PAYMENT_EXPIRY_MINUTES || '15', 10),
+    defaultCommitmentPercentage: parseFloat(process.env.BOOKING_COMMITMENT_PERCENTAGE || '35'),
+    defaultCancellationDeadlineHours: parseInt(process.env.BOOKING_CANCELLATION_DEADLINE_HOURS || '24', 10),
+    platformCommissionPercentage: parseFloat(process.env.PLATFORM_COMMISSION_PERCENTAGE || '10'),
+  },
 };
 
 // Validate required environment variables
