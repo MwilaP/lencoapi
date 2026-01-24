@@ -21,7 +21,6 @@ export interface Booking {
   client_id: string;
   provider_profile_id: string;
   provider_service_id: string | null;
-  availability_slot_id: string;
   status: BookingStatus;
   confirmation_mode: BookingConfirmationMode;
   currency: string;
