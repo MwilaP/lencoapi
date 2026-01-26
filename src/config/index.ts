@@ -37,6 +37,12 @@ export const config = {
     defaultCancellationDeadlineHours: parseInt(process.env.BOOKING_CANCELLATION_DEADLINE_HOURS || '24', 10),
     platformCommissionPercentage: parseFloat(process.env.PLATFORM_COMMISSION_PERCENTAGE || '10'),
   },
+
+  africastalking: {
+    username: process.env.AFRICASTALKING_USERNAME || '',
+    apiKey: process.env.AFRICASTALKING_API_KEY || '',
+    senderId: process.env.AFRICASTALKING_SENDER_ID || '',
+  },
 };
 
 // Validate required environment variables

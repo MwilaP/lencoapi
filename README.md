@@ -7,6 +7,8 @@ A robust payment API for Zambian mobile money payments using Lencopay gateway, i
 - 💳 **Mobile Money Payments**: Support for MTN, Airtel, and Zamtel mobile money in Zambia
 - 🔄 **Subscription Management**: Automated monthly subscription handling
 - 🔓 **Contact Unlocks**: One-time payment for unlocking provider contacts
+- 📅 **Booking System**: Commitment fee-based booking with escrow management
+- 📱 **SMS Notifications**: Automated SMS alerts via Africa's Talking API for booking updates
 - 🔐 **Secure**: Built with security best practices (Helmet, CORS, Rate Limiting)
 - 📊 **Database Integration**: Seamless Supabase integration for payment tracking
 - 🪝 **Webhook Support**: Real-time payment status updates via webhooks
@@ -17,6 +19,7 @@ A robust payment API for Zambian mobile money payments using Lencopay gateway, i
 - **Runtime**: Node.js with TypeScript
 - **Framework**: Express.js
 - **Payment Gateway**: Lencopay API v2.0
+- **SMS Gateway**: Africa's Talking API
 - **Database**: Supabase (PostgreSQL)
 - **Validation**: Express Validator
 - **Logging**: Winston
@@ -28,6 +31,7 @@ A robust payment API for Zambian mobile money payments using Lencopay gateway, i
 - npm or yarn or pnpm
 - Supabase account and project
 - Lencopay account with API credentials
+- Africa's Talking account with API credentials (for SMS notifications)
 
 ## Installation
 
@@ -430,10 +434,29 @@ const pollPaymentStatus = async (reference: string) => {
    - This is expected behavior if the contact was previously unlocked
    - Check the `contact_unlocks` table in Supabase
 
+## SMS Notifications
+
+The API includes an SMS notification system using Africa's Talking API. For detailed setup instructions, see [SMS_NOTIFICATION_SETUP.md](./SMS_NOTIFICATION_SETUP.md).
+
+**Quick Setup**:
+1. Install the Africa's Talking SDK: `pnpm install africastalking`
+2. Add credentials to `.env`:
+   ```env
+   AFRICASTALKING_USERNAME=your_username
+   AFRICASTALKING_API_KEY=your_api_key
+   AFRICASTALKING_SENDER_ID=your_sender_id  # Optional
+   ```
+
+**Notifications Sent**:
+- Provider receives SMS when booking is reserved (after client pays)
+- Client receives SMS when provider confirms booking
+- Client receives SMS when provider rejects booking (with refund info)
+
 ## Support
 
 For issues related to:
 - **Lencopay API**: Contact [email protected]
+- **Africa's Talking API**: Visit [africastalking.com/help](https://africastalking.com/help)
 - **This API**: Check the logs in the `logs/` directory
 
 ## License

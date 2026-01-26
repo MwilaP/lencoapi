@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { lencoPayService, MobileMoneyPaymentRequest } from './lencopay.service';
+import { notificationService } from './notification.service';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
@@ -215,6 +216,10 @@ export class BookingService {
       logger.error('Failed to reserve booking after payment', { error: rpcError, reference });
       throw new Error(rpcError.message || 'Failed to reserve booking');
     }
+
+    notificationService.notifyProviderOfReservation(payment.booking_id).catch(err => {
+      logger.error('Failed to send provider notification', { bookingId: payment.booking_id, error: err });
+    });
   }
 
   async confirmByProvider(bookingId: string, providerProfileId: string): Promise<Booking> {
@@ -226,6 +231,10 @@ export class BookingService {
     if (error || !data) {
       throw new Error(error?.message || 'Failed to confirm booking');
     }
+
+    notificationService.notifyClientOfConfirmation(bookingId).catch(err => {
+      logger.error('Failed to send client confirmation notification', { bookingId, error: err });
+    });
 
     return data as Booking;
   }
@@ -240,6 +249,10 @@ export class BookingService {
     if (error || !data) {
       throw new Error(error?.message || 'Failed to reject booking');
     }
+
+    notificationService.notifyClientOfRejection(bookingId, reason).catch(err => {
+      logger.error('Failed to send client rejection notification', { bookingId, error: err });
+    });
 
     return data as Booking;
   }
