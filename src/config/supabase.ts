@@ -18,11 +18,18 @@ export interface Payment {
   id: string;
   user_id: string;
   amount: number;
-  payment_type: 'subscription' | 'contact_unlock';
+  payment_type:
+    | 'subscription'
+    | 'contact_unlock'
+    | 'referral_access'
+    | 'commitment_fee'
+    | 'booking_commitment_fee';
   payment_method: 'mobile_money' | 'card';
   status: 'pending' | 'completed' | 'failed';
   provider_id?: string;
   transaction_reference: string;
+  commitment_fee_id?: string;
+  booking_id?: string;
   created_at: string;
   completed_at?: string;
 }

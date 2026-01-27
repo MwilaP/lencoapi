@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import paymentRoutes from './routes/payment.routes';
 import webhookRoutes from './routes/webhook.routes';
+import bookingRoutes from './routes/booking.routes';
+import notificationRoutes from './routes/notification.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
 
@@ -26,7 +28,11 @@ export const createApp = (): Application => {
   app.use('/api/', limiter);
 
   // Body parsing middleware
-  app.use(express.json());
+  app.use(express.json({
+    verify: (req, _res, buf) => {
+      (req as any).rawBody = buf;
+    },
+  }));
   app.use(express.urlencoded({ extended: true }));
 
   // Health check endpoint
@@ -40,7 +46,9 @@ export const createApp = (): Application => {
 
   // API routes
   app.use('/api/payments', paymentRoutes);
+  app.use('/api/bookings', bookingRoutes);
   app.use('/api/webhooks', webhookRoutes);
+  app.use('/api/notifications', notificationRoutes);
 
   // Error handling
   app.use(notFoundHandler);
