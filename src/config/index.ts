@@ -33,7 +33,7 @@ export const config = {
 
   booking: {
     paymentExpiryMinutes: parseInt(process.env.BOOKING_PAYMENT_EXPIRY_MINUTES || '15', 10),
-    defaultCommitmentPercentage: parseFloat(process.env.BOOKING_COMMITMENT_PERCENTAGE || '35'),
+    defaultCommitmentPercentage: parseFloat(process.env.BOOKING_COMMITMENT_PERCENTAGE || '10'),
     defaultCancellationDeadlineHours: parseInt(process.env.BOOKING_CANCELLATION_DEADLINE_HOURS || '24', 10),
     platformCommissionPercentage: parseFloat(process.env.PLATFORM_COMMISSION_PERCENTAGE || '10'),
   },

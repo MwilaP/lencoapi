@@ -232,7 +232,7 @@ export class NotificationService {
         minute: '2-digit',
       });
 
-      const message = `Vibeslinks Booking Alert!\n\n` +
+      const message = `Vibeslinks Booking Alert!\n` +
         `You have a new booking request${service?.service_name ? ` for ${service.service_name}` : ''}.\n` +
         `Date: ${formattedDate} at ${formattedTime}\n` +
         `Please confirm or reject this booking in your dashboard.`;
@@ -447,8 +447,7 @@ export class NotificationService {
       // Send SMS notification about the airtime
       const smsMessage = `Welcome to VibesLinx, ${providerName}!\n\n` +
         `Thank you for completing your provider registration. ` +
-        `You've received K10 airtime as a welcome bonus.\n\n` +
-        `Start adding your services and availability to receive bookings!`;
+        `You've received K10 airtime as a welcome bonus.`;
 
       await this.sendSMS({
         to: formattedPhone,
