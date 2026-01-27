@@ -23,6 +23,7 @@ export interface BookingNotificationData {
 export class NotificationService {
   private client: any;
   private sms: any;
+  private airtime: any;
 
   private formatPhoneNumber(phone: string): string | null {
     if (!phone) {
@@ -85,7 +86,8 @@ export class NotificationService {
           username: config.africastalking.username,
         });
         this.sms = this.client.SMS;
-        logger.info('Africa\'s Talking SMS service initialized successfully', {
+        this.airtime = this.client.AIRTIME;
+        logger.info('Africa\'s Talking SMS and Airtime services initialized successfully', {
           username: config.africastalking.username,
           senderId: config.africastalking.senderId || 'none',
         });
@@ -230,11 +232,9 @@ export class NotificationService {
         minute: '2-digit',
       });
 
-      const message = `New Booking Alert!\n\n` +
+      const message = `Vibeslinks Booking Alert!\n\n` +
         `You have a new booking request${service?.service_name ? ` for ${service.service_name}` : ''}.\n` +
         `Date: ${formattedDate} at ${formattedTime}\n` +
-        `Amount: ${booking.currency} ${booking.total_amount.toFixed(2)}\n` +
-        `Commitment Fee Paid: ${booking.currency} ${booking.commitment_fee_amount.toFixed(2)}\n\n` +
         `Please confirm or reject this booking in your dashboard.`;
 
       logger.info('notifyProviderOfReservation: Sending SMS', {
@@ -295,16 +295,16 @@ export class NotificationService {
 
       const { data: clientProfile, error: profileError } = await supabase
         .from('client_profiles')
-        .select('phone_number')
+        .select('mobile_number')
         .eq('user_id', booking.client_id)
         .single();
 
-      const formattedPhone = this.formatPhoneNumber(clientProfile?.phone_number);
+      const formattedPhone = this.formatPhoneNumber(clientProfile?.mobile_number);
       if (!formattedPhone) {
         logger.warn('notifyClientOfConfirmation: Client phone number not available or invalid', { 
           bookingId, 
           clientId: booking.client_id,
-          rawPhone: clientProfile?.phone_number 
+          rawPhone: clientProfile?.mobile_number 
         });
         return;
       }
@@ -320,12 +320,12 @@ export class NotificationService {
         minute: '2-digit',
       });
 
-      const message = `Booking Confirmed!\n\n` +
+      const providerContact = provider.contact_number ? `\nPlease contact ${provider.name} : ${provider.contact_number}` : '';
+      
+      const message = `VibesLinx Booking Confirmed!\n` +
         `${provider.name} has confirmed your booking${service?.service_name ? ` for ${service.service_name}` : ''}.\n` +
-        `Date: ${formattedDate} at ${formattedTime}\n` +
-        `Total Amount: ${booking.currency} ${booking.total_amount.toFixed(2)}\n` +
-        `Remaining Balance: ${booking.currency} ${(booking.total_amount - booking.commitment_fee_amount).toFixed(2)}\n\n` +
-        `See you soon!`;
+        `Date: ${formattedDate} at ${formattedTime}` +
+        providerContact 
 
       await this.sendSMS({
         to: formattedPhone,
@@ -365,16 +365,16 @@ export class NotificationService {
 
       const { data: clientProfile, error: profileError } = await supabase
         .from('client_profiles')
-        .select('phone_number')
+        .select('mobile_number')
         .eq('user_id', booking.client_id)
         .single();
 
-      const formattedPhone = this.formatPhoneNumber(clientProfile?.phone_number);
+      const formattedPhone = this.formatPhoneNumber(clientProfile?.mobile_number);
       if (!formattedPhone) {
         logger.warn('notifyClientOfRejection: Client phone number not available or invalid', { 
           bookingId, 
           clientId: booking.client_id,
-          rawPhone: clientProfile?.phone_number 
+          rawPhone: clientProfile?.mobile_number 
         });
         return;
       }
@@ -395,6 +395,76 @@ export class NotificationService {
         bookingId,
         error: error instanceof Error ? error.message : error,
       });
+    }
+  }
+
+  async sendWelcomeAirtime(phoneNumber: string, providerName: string): Promise<boolean> {
+    logger.info('sendWelcomeAirtime: Starting airtime send', {
+      phoneNumber,
+      providerName,
+    });
+
+    if (!this.airtime) {
+      logger.warn('sendWelcomeAirtime: Airtime service not initialized', {
+        hasClient: !!this.client,
+        hasAirtime: !!this.airtime,
+      });
+      return false;
+    }
+
+    const formattedPhone = this.formatPhoneNumber(phoneNumber);
+    if (!formattedPhone) {
+      logger.warn('sendWelcomeAirtime: Invalid phone number', {
+        rawPhone: phoneNumber,
+      });
+      return false;
+    }
+
+    try {
+      const options = {
+        recipients: [
+          {
+            phoneNumber: formattedPhone,
+            currencyCode: 'ZMW',
+            amount: 10,
+          },
+        ],
+      };
+
+      logger.info('sendWelcomeAirtime: Calling Africa\'s Talking Airtime API', {
+        phoneNumber: formattedPhone,
+        amount: 10,
+        currency: 'ZMW',
+      });
+
+      const response = await this.airtime.send(options);
+
+      logger.info('sendWelcomeAirtime: Airtime sent successfully', {
+        phoneNumber: formattedPhone,
+        response: JSON.stringify(response),
+      });
+
+      // Send SMS notification about the airtime
+      const smsMessage = `Welcome to VibesLinx, ${providerName}!\n\n` +
+        `Thank you for completing your provider registration. ` +
+        `You've received K10 airtime as a welcome bonus.\n\n` +
+        `Start adding your services and availability to receive bookings!`;
+
+      await this.sendSMS({
+        to: formattedPhone,
+        message: smsMessage,
+      });
+
+      return true;
+    } catch (error) {
+      logger.error('sendWelcomeAirtime: Failed to send airtime', {
+        phoneNumber: formattedPhone,
+        error: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined,
+        errorDetails: JSON.stringify(error),
+      });
+      return false;
     }
   }
 }

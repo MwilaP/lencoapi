@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import paymentRoutes from './routes/payment.routes';
 import webhookRoutes from './routes/webhook.routes';
 import bookingRoutes from './routes/booking.routes';
+import notificationRoutes from './routes/notification.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
 
@@ -47,6 +48,7 @@ export const createApp = (): Application => {
   app.use('/api/payments', paymentRoutes);
   app.use('/api/bookings', bookingRoutes);
   app.use('/api/webhooks', webhookRoutes);
+  app.use('/api/notifications', notificationRoutes);
 
   // Error handling
   app.use(notFoundHandler);
